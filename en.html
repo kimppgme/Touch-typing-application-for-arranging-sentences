@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Arrangement Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .level-selection {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .level-btn {
+            padding: 20px 40px;
+            margin: 10px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+
+        .level-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .level-easy {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .level-medium {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .level-hard {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .score-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+            animation: pulse 1s infinite;
+        }
+
+        .timer.warning {
+            color: #f44336;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            min-height: 80px;
+        }
+
+        .word-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            user-select: none;
+        }
+
+        .answer-area {
+            background: #fff;
+            min-height: 60px;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #2196f3;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3em;
+            border: none;
+            background: transparent;
+            text-align: center;
+            outline: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .answer-input::placeholder {
+            color: #999;
+        }
+
+        .answer-area.correct {
+            background: #c8e6c9;
+            border-color: #4caf50;
+            animation: correctPulse 0.5s;
+        }
+
+        .answer-area.wrong {
+            background: #ffcdd2;
+            border-color: #f44336;
+            animation: shake 0.5s;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
+        }
+
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            min-height: 40px;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback.correct {
+            color: #4caf50;
+        }
+
+        .feedback.wrong {
+            color: #f44336;
+        }
+
+        .emoji {
+            font-size: 2em;
+            margin: 0 10px;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .level-btn {
+                padding: 15px 30px;
+                font-size: 1.1em;
+            }
+
+            .word-card {
+                font-size: 1.1em;
+                padding: 12px 25px;
+            }
+
+            .btn {
+                padding: 12px 30px;
+                font-size: 1em;
+            }
+
+            .timer {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Sentence Arrangement Game</h1>
+            <p>Type the correct sentence (no spaces)</p>
+        </div>
+
+        <div class="level-selection" id="levelSelection">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Select Difficulty Level</h2>
+            <div>
+                <button class="level-btn level-easy" onclick="startGame('easy')">
+                    😊 Easy<br><small style="font-size: 0.7em;">50 seconds | 10 questions</small>
+                </button>
+                <button class="level-btn level-medium" onclick="startGame('medium')">
+                    🤔 Medium<br><small style="font-size: 0.7em;">30 seconds | 10 questions</small>
+                </button>
+                <button class="level-btn level-hard" onclick="startGame('hard')">
+                    🔥 Hard<br><small style="font-size: 0.7em;">20 seconds | 10 questions</small>
+                </button>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div style="text-align: center;">
+                <span class="level-badge" id="levelBadge"></span>
+            </div>
+
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-label">Score</div>
+                    <div class="score-value" id="score">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Question</div>
+                    <div class="score-value" id="level">1/10</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Correct</div>
+                    <div class="score-value" id="correct">0</div>
+                </div>
+            </div>
+
+            <div class="timer" id="timer">50</div>
+
+            <div class="words-container" id="wordsContainer"></div>
+
+            <div class="answer-area" id="answerArea">
+                <input type="text" class="answer-input" id="answerInput" placeholder="Type the sentence (no spaces)" autocomplete="off">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-check" onclick="checkAnswer()">✓ Submit</button>
+                <button class="btn btn-reset" onclick="resetAnswer()">↺ Reset</button>
+                <button class="btn btn-back" onclick="backToMenu()">← Back to Menu</button>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        const sentences = {
+            easy: [
+                ['I', 'love', 'you'],
+                ['The', 'cat', 'sleeps'],
+                ['Birds', 'can', 'fly'],
+                ['She', 'eats', 'food'],
+                ['He', 'reads', 'books'],
+                ['They', 'play', 'games'],
+                ['Dogs', 'run', 'fast'],
+                ['We', 'are', 'happy'],
+                ['Sun', 'is', 'bright'],
+                ['Rain', 'is', 'wet']
+            ],
+            medium: [
+                ['The', 'children', 'are', 'playing', 'football'],
+                ['My', 'mother', 'cooks', 'delicious', 'food'],
+                ['The', 'teacher', 'explains', 'the', 'lesson'],
+                ['We', 'went', 'to', 'the', 'park'],
+                ['She', 'likes', 'reading', 'story', 'books'],
+                ['The', 'birds', 'sing', 'beautiful', 'songs'],
+                ['My', 'father', 'drives', 'to', 'work'],
+                ['The', 'flowers', 'bloom', 'in', 'spring'],
+                ['Children', 'love', 'eating', 'ice', 'cream'],
+                ['We', 'study', 'English', 'every', 'day']
+            ],
+            hard: [
+                ['The', 'sun', 'rises', 'from', 'the', 'east', 'beautifully'],
+                ['Students', 'are', 'working', 'hard', 'on', 'their', 'homework'],
+                ['My', 'grandmother', 'loves', 'baking', 'cookies', 'for', 'us'],
+                ['The', 'colorful', 'butterfly', 'flies', 'around', 'the', 'garden'],
+                ['We', 'enjoyed', 'swimming', 'at', 'the', 'beach', 'yesterday'],
+                ['The', 'musician', 'plays', 'classical', 'music', 'very', 'well'],
+                ['Scientists', 'are', 'conducting', 'important', 'research', 'carefully', 'today'],
+                ['The', 'little', 'girl', 'draws', 'beautiful', 'pictures', 'happily'],
+                ['My', 'brother', 'practices', 'guitar', 'every', 'single', 'day'],
+                ['The', 'red', 'ball', 'rolls', 'down', 'the', 'hill']
+            ]
+        };
+
+        let currentDifficulty = '';
+        let currentLevel = 0;
+        let score = 0;
+        let correctCount = 0;
+        let correctAnswer = [];
+        let timerInterval;
+        let timeLeft = 0;
+        const TOTAL_QUESTIONS = 10;
+
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            currentLevel = 0;
+            score = 0;
+            correctCount = 0;
+            
+            document.getElementById('levelSelection').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            
+            const badge = document.getElementById('levelBadge');
+            if (difficulty === 'easy') {
+                badge.textContent = '😊 Easy Level';
+                badge.style.background = 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)';
+            } else if (difficulty === 'medium') {
+                badge.textContent = '🤔 Medium Level';
+                badge.style.background = 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)';
+            } else {
+                badge.textContent = '🔥 Hard Level';
+                badge.style.background = 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)';
+            }
+            
+            loadQuestion();
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            
+            correctAnswer = sentences[currentDifficulty][currentLevel];
+            const shuffledWords = shuffle(correctAnswer);
+            
+            const wordsContainer = document.getElementById('wordsContainer');
+            wordsContainer.innerHTML = '';
+            
+            shuffledWords.forEach(word => {
+                const wordCard = document.createElement('div');
+                wordCard.className = 'word-card';
+                wordCard.textContent = word;
+                wordsContainer.appendChild(wordCard);
+            });
+            
+            document.getElementById('level').textContent = (currentLevel + 1) + '/' + TOTAL_QUESTIONS;
+            document.getElementById('answerArea').className = 'answer-area';
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('answerInput').focus();
+            document.getElementById('feedback').innerHTML = '';
+            
+            if (currentDifficulty === 'easy') {
+                timeLeft = 50;
+            } else if (currentDifficulty === 'medium') {
+                timeLeft = 30;
+            } else {
+                timeLeft = 20;
+            }
+            
+            updateTimer();
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = timeLeft + ' seconds';
+            
+            if (timeLeft <= 10) {
+                timerEl.className = 'timer warning';
+            } else {
+                timerEl.className = 'timer';
+            }
+        }
+
+        function timeUp() {
+            document.getElementById('feedback').innerHTML = '<span class="emoji">⏰</span>Time\'s up! Moving to next question<span class="emoji">⏭️</span>';
+            document.getElementById('feedback').className = 'feedback wrong';
+            document.getElementById('answerArea').className = 'answer-area wrong';
+            document.getElementById('answerInput').disabled = true;
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1000);
+        }
+
+        function checkAnswer() {
+            clearInterval(timerInterval);
+            
+            const inputElement = document.getElementById('answerInput');
+            const userInput = inputElement.value.trim().replace(/\s+/g, '');
+            
+            if (userInput === '') {
+                document.getElementById('feedback').innerHTML = '⚠️ Please type your answer first';
+                document.getElementById('feedback').className = 'feedback wrong';
+                startTimer();
+                return;
+            }
+
+            const correctAnswerNoSpace = correctAnswer.join('');
+            const isCorrect = userInput.toLowerCase() === correctAnswerNoSpace.toLowerCase();
+            const feedbackEl = document.getElementById('feedback');
+            const answerAreaEl = document.getElementById('answerArea');
+            
+            inputElement.disabled = true;
+            
+            if (isCorrect) {
+                let points = 10;
+                if (currentDifficulty === 'medium') points = 15;
+                if (currentDifficulty === 'hard') points = 20;
+                
+                if (currentDifficulty === 'easy' && timeLeft > 30) points += 5;
+                if (currentDifficulty === 'medium' && timeLeft > 15) points += 5;
+                if (currentDifficulty === 'hard' && timeLeft > 10) points += 5;
+                
+                score += points;
+                correctCount++;
+                document.getElementById('score').textContent = score;
+                document.getElementById('correct').textContent = correctCount;
+                feedbackEl.innerHTML = `<span class="emoji">🎉</span>Correct! +${points} points<span class="emoji">✨</span>`;
+                feedbackEl.className = 'feedback correct';
+                answerAreaEl.className = 'answer-area correct';
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1500);
+            } else {
+                feedbackEl.innerHTML = '<span class="emoji">❌</span>Wrong! Moving to next question<span class="emoji">⏭️</span>';
+                feedbackEl.className = 'feedback wrong';
+                answerAreaEl.className = 'answer-area wrong';
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1000);
+            }
+        }
+
+        function resetAnswer() {
+            clearInterval(timerInterval);
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentLevel++;
+            if (currentLevel >= TOTAL_QUESTIONS) {
+                clearInterval(timerInterval);
+                const percentage = (correctCount / TOTAL_QUESTIONS * 100).toFixed(0);
+                document.getElementById('feedback').innerHTML = 
+                    `<span class="emoji">🏆</span>Game Over!<span class="emoji">🎊</span><br>` +
+                    `Correct answers: ${correctCount}/${TOTAL_QUESTIONS} (${percentage}%)<br>` +
+                    `Total Score: ${score} points`;
+                document.getElementById('feedback').className = 'feedback correct';
+                document.getElementById('timer').textContent = '🎉';
+                document.getElementById('answerInput').disabled = true;
+                document.querySelector('.words-container').style.display = 'none';
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function backToMenu() {
+            clearInterval(timerInterval);
+            document.getElementById('levelSelection').style.display = 'block';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('score').textContent = '0';
+            document.getElementById('correct').textContent = '0';
+            document.querySelector('.words-container').style.display = 'flex';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const answerInput = document.getElementById('answerInput');
+            if (answerInput) {
+                answerInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !this.disabled) {
+                        checkAnswer();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
